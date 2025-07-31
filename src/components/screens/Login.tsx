@@ -8,40 +8,58 @@ import {
   Alert,
   Image,
 } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
- const Login: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [errors, setErrors] = useState<{ email: string; password: string }>({
-    email: "",
-    password: "",
-  });
+type FormData = { email: string; password: string };
+type FormErrors = Partial<FormData>;
 
-  const validateEmail = (inputEmail: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(inputEmail);
+const FbLogin: React.FC = () => {
+  const [form, setForm] = useState<FormData>({ email: "", password: "" });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validateField = (name: keyof FormData, value: string) => {
+    let error = "";
+    if (name === "email" && !validateEmail(value)) {
+      error = "Enter a valid email";
+    }
+    if (name === "password" && value.length < 6) {
+      error = "Password must be at least 6 characters";
+    }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  const handleInputChange = (name: keyof FormData, value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" })); // Clear error while typing
   };
 
   const handleLogin = () => {
-    let valid = true;
-    const tempErrors = { email: "", password: "" };
+    validateField("email", form.email);
+    validateField("password", form.password);
 
-    if (!validateEmail(email)) {
-      tempErrors.email = "Enter a valid email";
-      valid = false;
-    }
-
-    if (password.length < 6) {
-      tempErrors.password = "Password must be at least 6 characters";
-      valid = false;
-    }
-
-    setErrors(tempErrors);
-
-    if (valid) {
-      Alert.alert("Login Successful", `Welcome ${email}`);
+    if (
+      form.email &&
+      form.password &&
+      validateEmail(form.email) &&
+      form.password.length >= 6
+    ) {
+      Alert.alert("✅ Login Successful", `Welcome ${form.email}`);
+      setForm({ email: "", password: "" });
+      setErrors({});
+    } else {
+      Alert.alert("⚠️ Please fill correct details");
     }
   };
+
+  const isDisabled =
+    !form.email ||
+    !form.password ||
+    !validateEmail(form.email) ||
+    form.password.length < 6;
 
   return (
     <View style={styles.container}>
@@ -55,30 +73,39 @@ import {
       <TextInput
         style={styles.input}
         placeholder="Email or Phone"
-        value={email}
-        onChangeText={setEmail}
+        value={form.email}
+        onChangeText={(text) => handleInputChange("email", text)}
+        onBlur={() => validateField("email", form.email)}
         keyboardType="email-address"
       />
       {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      {errors.password ? (
-        <Text style={styles.error}>{errors.password}</Text>
-      ) : null}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+          value={form.password}
+          onChangeText={(text) => handleInputChange("password", text)}
+          onBlur={() => validateField("password", form.password)}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword((prev) => !prev)}
+          style={styles.eyeButton}
+        >
+          <Ionicons
+            name={showPassword ? "eye" : "eye-off"}
+            size={24}
+            color={showPassword ? "#0c0d0d" : "#555"}
+          />
+        </TouchableOpacity>
+      </View>
+      {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
 
       <TouchableOpacity
-        style={[
-          styles.button,
-          !email || !password ? styles.disabledButton : null,
-        ]}
+        style={[styles.button, isDisabled && styles.disabledButton]}
         onPress={handleLogin}
-        disabled={!email || !password}
+        disabled={isDisabled}
       >
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
@@ -99,34 +126,58 @@ import {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    alignItems: "center",
     padding: 20,
+    backgroundColor: "#fff",
   },
+
   logo: {
     width: 150,
     height: 150,
+    borderRadius: 75,
     marginBottom: 30,
-    borderRadius: 75, 
-    resizeMode: "cover",
   },
+
   input: {
     width: "100%",
     height: 50,
-    borderColor: "#ccc",
     borderWidth: 1,
+    borderColor: "#ccc",
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 8,
     backgroundColor: "#f9f9f9",
   },
+
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: "#f9f9f9",
+  },
+
+  passwordInput: {
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 15,
+  },
+
+  eyeButton: {
+    paddingHorizontal: 10,
+  },
+
   error: {
     color: "red",
+    fontSize: 13,
     alignSelf: "flex-start",
     marginBottom: 8,
-    fontSize: 13,
   },
+
   button: {
     width: "100%",
     height: 50,
@@ -136,25 +187,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 10,
   },
+
   disabledButton: {
     backgroundColor: "#7daaff",
   },
+
   buttonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },
+
   link: {
     color: "#1877f2",
     fontSize: 16,
     marginVertical: 10,
   },
+
   separator: {
     width: "100%",
     height: 1,
     backgroundColor: "#ddd",
     marginVertical: 15,
   },
+
   createButton: {
     width: "80%",
     height: 45,
@@ -163,6 +219,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
   },
+
   createButtonText: {
     color: "#fff",
     fontSize: 16,
@@ -170,6 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// export default Login;
-
-export { Login as FbLogin };
+export { FbLogin };
