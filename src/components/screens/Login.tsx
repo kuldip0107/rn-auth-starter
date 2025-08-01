@@ -10,59 +10,72 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-type FormData = { email: string; password: string };
-type FormErrors = Partial<FormData>;
+interface State {
+  form: { email: string; password: string };
+  errors: Partial<{ email: string; password: string }>;
+  showPassword: boolean;
+}
 
 const FbLogin: React.FC = () => {
-  const [form, setForm] = useState<FormData>({ email: "", password: "" });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [showPassword, setShowPassword] = useState(false);
+  const [state, setState] = useState<State>({
+    form: { email: "", password: "" },
+    errors: {},
+    showPassword: false,
+  });
 
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const validateField = (name: keyof FormData, value: string) => {
+  const validateField = (name: keyof State["form"], value: string) => {
     let error = "";
-    if (name === "email" && !validateEmail(value)) {
-      error = "Enter a valid email";
-    }
-    if (name === "password" && value.length < 6) {
+    if (name === "email" && !validateEmail(value)) error = "Enter a valid email";
+    if (name === "password" && value.length < 6)
       error = "Password must be at least 6 characters";
-    }
-    setErrors((prev) => ({ ...prev, [name]: error }));
+
+    setState((prev) => ({
+      ...prev,
+      errors: { ...prev.errors, [name]: error },
+    }));
   };
 
-  const handleInputChange = (name: keyof FormData, value: string) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // Clear error while typing
+  const handleInputChange = (name: keyof State["form"], value: string) => {
+    setState((prev) => ({
+      ...prev,
+      form: { ...prev.form, [name]: value },
+      errors: { ...prev.errors, [name]: "" }, // clear error while typing
+    }));
   };
 
   const handleLogin = () => {
-    validateField("email", form.email);
-    validateField("password", form.password);
+    validateField("email", state.form.email);
+    validateField("password", state.form.password);
 
     if (
-      form.email &&
-      form.password &&
-      validateEmail(form.email) &&
-      form.password.length >= 6
+      state.form.email &&
+      state.form.password &&
+      validateEmail(state.form.email) &&
+      state.form.password.length >= 6
     ) {
-      Alert.alert("✅ Login Successful", `Welcome ${form.email}`);
-      setForm({ email: "", password: "" });
-      setErrors({});
+      Alert.alert("✅ Login Successful", `Welcome ${state.form.email}`);
+      setState({
+        form: { email: "", password: "" },
+        errors: {},
+        showPassword: false,
+      });
     } else {
       Alert.alert("⚠️ Please fill correct details");
     }
   };
 
   const isDisabled =
-    !form.email ||
-    !form.password ||
-    !validateEmail(form.email) ||
-    form.password.length < 6;
+    !state.form.email ||
+    !state.form.password ||
+    !validateEmail(state.form.email) ||
+    state.form.password.length < 6;
 
   return (
     <View style={styles.container}>
+      
       <Image
         source={{
           uri: "https://as2.ftcdn.net/v2/jpg/05/89/82/55/1000_F_589825542_quWl3JNZZgwlwi40s0aQUVHNbMYvtsnd.jpg",
@@ -73,34 +86,40 @@ const FbLogin: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Email or Phone"
-        value={form.email}
+        value={state.form.email}
         onChangeText={(text) => handleInputChange("email", text)}
-        onBlur={() => validateField("email", form.email)}
+        onBlur={() => validateField("email", state.form.email)}
         keyboardType="email-address"
       />
-      {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
+      {state.errors.email ? (
+        <Text style={styles.error}>{state.errors.email}</Text>
+      ) : null}
 
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
           placeholder="Password"
-          secureTextEntry={!showPassword}
-          value={form.password}
+          secureTextEntry={!state.showPassword}
+          value={state.form.password}
           onChangeText={(text) => handleInputChange("password", text)}
-          onBlur={() => validateField("password", form.password)}
+          onBlur={() => validateField("password", state.form.password)}
         />
         <TouchableOpacity
-          onPress={() => setShowPassword((prev) => !prev)}
+          onPress={() =>
+            setState((prev) => ({ ...prev, showPassword: !prev.showPassword }))
+          }
           style={styles.eyeButton}
         >
           <Ionicons
-            name={showPassword ? "eye" : "eye-off"}
+            name={state.showPassword ? "eye" : "eye-off"}
             size={24}
-            color={showPassword ? "#0c0d0d" : "#555"}
+            color={state.showPassword ? "#0c0d0d" : "#555"}
           />
         </TouchableOpacity>
       </View>
-      {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
+      {state.errors.password ? (
+        <Text style={styles.error}>{state.errors.password}</Text>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.button, isDisabled && styles.disabledButton]}
@@ -129,16 +148,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#2791F5",
   },
-
   logo: {
     width: 150,
     height: 150,
     borderRadius: 75,
     marginBottom: 30,
   },
-
   input: {
     width: "100%",
     height: 50,
@@ -149,7 +166,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "#f9f9f9",
   },
-
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -160,24 +176,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "#f9f9f9",
   },
-
   passwordInput: {
     flex: 1,
     height: 50,
     paddingHorizontal: 15,
   },
-
   eyeButton: {
     paddingHorizontal: 10,
   },
-
   error: {
     color: "red",
     fontSize: 13,
     alignSelf: "flex-start",
     marginBottom: 8,
   },
-
   button: {
     width: "100%",
     height: 50,
@@ -187,30 +199,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 10,
   },
-
   disabledButton: {
-    backgroundColor: "#7daaff",
+    backgroundColor: "#cea71bff",
   },
-
   buttonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },
-
   link: {
-    color: "#1877f2",
+    color: "#dbe1e8ff",
     fontSize: 16,
     marginVertical: 10,
   },
-
   separator: {
     width: "100%",
     height: 1,
     backgroundColor: "#ddd",
     marginVertical: 15,
   },
-
   createButton: {
     width: "80%",
     height: 45,
@@ -219,7 +226,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
   },
-
   createButtonText: {
     color: "#fff",
     fontSize: 16,
