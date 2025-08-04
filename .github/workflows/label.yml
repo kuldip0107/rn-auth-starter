@@ -1,10 +1,10 @@
 frontend:
-  - "src/frontend/**"
-backend:
-  - "src/backend/**"
+  - "src/components/**"
+screens:
+  - "src/components/screens/**"
+config:
+  - ".github/**"
 docs:
   - "**/*.md"
 tests:
-  - "tests/**"
-config:
-  - ".github/**"
+  - "__tests__/**"
