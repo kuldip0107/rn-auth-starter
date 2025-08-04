@@ -76,10 +76,12 @@ const FbLogin: React.FC = () => {
   return (
     <View style={styles.container}>
       
-      <Image
+                <Image
         source={{
           uri: "https://as2.ftcdn.net/v2/jpg/05/89/82/55/1000_F_589825542_quWl3JNZZgwlwi40s0aQUVHNbMYvtsnd.jpg",
         }}
+
+
         style={styles.logo}
       />
 

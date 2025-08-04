@@ -15,8 +15,7 @@ jobs:
 
     permissions:
       contents: read
-      security-events: write
-      actions: read
+      pull-requests: write  # Needed for reviewdog PR comments
 
     steps:
       - name: Checkout code
@@ -30,15 +29,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint with SARIF output
-        run: |
-          npx eslint . \
-            --ext .js,.jsx,.ts,.tsx \
-            --format @microsoft/eslint-formatter-sarif \
-            --output-file eslint-results.sarif
-        continue-on-error: true
+      - name: Run ESLint manually (debugging)
+        run: npx eslint src --ext .js,.jsx,.ts,.tsx || true
 
-      - name: Upload SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Run ESLint with Reviewdog (for PR comments)
+        uses: reviewdog/action-eslint@v1
         with:
-          sarif_file: eslint-results.sarif
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review  # Adds inline comments on PR
+          eslint_flags: "--ext .js,.jsx,.ts,.tsx src"
+          fail_on_error: true  # Optional: fails the job if there are errors
