@@ -136,7 +136,8 @@ const FbLogin: React.FC = () => {
       <View style={styles.separator} />
 
       <TouchableOpacity style={styles.createButton}>
-        <Text style={styles.createButtonText}>Create New Account</Text>
+        <Text style={styles.createButtonText}
+        >Create New Account</Text>
       </TouchableOpacity>
     </View>
   );
